@@ -9,6 +9,7 @@
         ],
         "sourceMaps": "inline"
     },
+    "bugs": "https://github.com/ibi-group/isotropic-timeout/issues",
     "contributors": [
         "Duane Sibilly <duane.sibilly@ibigroup.com>"
     ],
@@ -47,9 +48,11 @@
         },
         "root": true
     },
+    "homepage": "https://github.com/ibi-group/isotropic-timeout",
     "license": "BSD-3-Clause",
     "main": "lib/timeout.js",
     "name": "isotropic-timeout",
+    "repository": "ibi-group/isotropic-timeout",
     "scripts": {
         "build": "babel js -d lib",
         "lint": "eslint js test",
