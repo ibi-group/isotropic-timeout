@@ -1,11 +1,12 @@
-import Error from 'isotropic-error';
-
-import later from 'isotropic-later';
+import _Error from 'isotropic-error';
+import _later from 'isotropic-later';
 
 export default (milliseconds, callbackFunction, lateCallbackFunction) => {
-    const handle = later(milliseconds, () => {
-        callbackFunction(Error({
-            details: milliseconds,
+    const handle = _later(milliseconds, () => {
+        callbackFunction(_Error({
+            details: {
+                milliseconds
+            },
             message: `Timeout after ${milliseconds} milliseconds`,
             name: 'TimeoutError'
         }));
