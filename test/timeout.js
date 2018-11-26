@@ -1,15 +1,17 @@
 import _chai from 'chai';
 import _Error from 'isotropic-error';
+import _later from 'isotropic-later';
 import _mocha from 'mocha';
 import _timeout from '../js/timeout.js';
-import _timers from 'timers';
 
-_mocha.describe('timeout', function () {
-    this.timeout(144);
-
+_mocha.describe('timeout', () => {
     _mocha.it('should be a function', () => {
         _chai.expect(_timeout).to.be.a('function');
     });
+});
+
+_mocha.describe('timeout when given a callback function', function () {
+    this.timeout(144);
 
     _mocha.it('should return a callback function with a limited time to be called', callbackFunction => {
         let called = 0;
@@ -20,16 +22,16 @@ _mocha.describe('timeout', function () {
 
         _chai.expect(limitedTimeCallbackFunction).to.be.a('function');
 
-        _timers.setTimeout(() => {
+        _later(21, () => {
             _chai.expect(called).to.equal(0);
-        }, 21);
+        });
 
-        _timers.setTimeout(() => {
+        _later(55, () => {
             _chai.expect(called).to.equal(1);
             limitedTimeCallbackFunction();
             _chai.expect(called).to.equal(1);
             callbackFunction();
-        }, 55);
+        });
     });
 
     _mocha.it('should pass an error if the callback is not called in time', callbackFunction => {
@@ -57,18 +59,18 @@ _mocha.describe('timeout', function () {
                 _chai.expect(this).to.equal(contextObject);
             });
 
-        _timers.setTimeout(() => {
+        _later(34, () => {
             Reflect.apply(limitedTimeCallbackFunction, contextObject, [
                 'a',
                 'b',
                 'c'
             ]);
-        }, 34);
+        });
 
-        _timers.setTimeout(() => {
+        _later(89, () => {
             _chai.expect(called).to.equal(1);
             callbackFunction();
-        }, 89);
+        });
     });
 
     _mocha.it('should call the lateCallbackFunction when called after the timeout', callbackFunction => {
@@ -93,12 +95,12 @@ _mocha.describe('timeout', function () {
                 _chai.expect(this).to.equal(contextObject);
             });
 
-        _timers.setTimeout(() => {
+        _later(21, () => {
             _chai.expect(called).to.equal(0);
             _chai.expect(lateCalled).to.equal(0);
-        }, 21);
+        });
 
-        _timers.setTimeout(() => {
+        _later(55, () => {
             _chai.expect(called).to.equal(1);
             _chai.expect(lateCalled).to.equal(0);
             Reflect.apply(timeLimitedCallbackFunction, contextObject, [
@@ -108,6 +110,224 @@ _mocha.describe('timeout', function () {
             ]);
             _chai.expect(lateCalled).to.equal(1);
             callbackFunction();
-        }, 55);
+        });
+    });
+});
+
+_mocha.describe('timeout when given a promise', function () {
+    this.timeout(144);
+
+    _mocha.it('should return a promise with a limited time to be resolved', callbackFunction => {
+        let called = 0;
+
+        const limitedTimePromise = _timeout(34, new Promise(resolve => {
+            _later(55, () => {
+                _chai.expect(called).to.equal(1);
+                resolve();
+                _chai.expect(called).to.equal(1);
+                callbackFunction();
+            });
+        }))
+            .then(() => {
+                called += 1;
+            }, () => {
+                called += 1;
+            });
+
+        _chai.expect(limitedTimePromise).to.be.a('promise');
+
+        _later(21, () => {
+            _chai.expect(called).to.equal(0);
+        });
+    });
+
+    _mocha.it('should return a promise with a limited time to be rejected', callbackFunction => {
+        let called = 0;
+
+        const limitedTimePromise = _timeout(34, new Promise((resolve, reject) => {
+            _later(55, () => {
+                _chai.expect(called).to.equal(1);
+                reject(new _Error());
+                _chai.expect(called).to.equal(1);
+                callbackFunction();
+            });
+        }))
+            .then(() => {
+                called += 1;
+            }, () => {
+                called += 1;
+            });
+
+        _chai.expect(limitedTimePromise).to.be.a('promise');
+
+        _later(21, () => {
+            _chai.expect(called).to.equal(0);
+        });
+    });
+
+    _mocha.it('should reject if the promise is not resolved in time', callbackFunction => {
+        _timeout(55, new Promise(() => {
+            // Do nothing
+        }))
+            .catch(error => {
+                _chai.expect(error).to.be.an.instanceOf(_Error);
+                _chai.expect(error).to.have.property('details').that.is.an('object').that.has.property('milliseconds', 55);
+                _chai.expect(error).to.have.property('message', 'Timeout after 55 milliseconds');
+                _chai.expect(error).to.have.property('name', 'TimeoutError');
+                callbackFunction();
+            });
+    });
+
+    _mocha.it('should allow the promise to resolve to a value within time', callbackFunction => {
+        let called = 0,
+            resolvedValue;
+
+        const valueObject = {},
+
+            limitedTimePromise = _timeout(55, new Promise(resolve => {
+                _later(34, () => {
+                    resolve(valueObject);
+                });
+            }))
+                .then(value => {
+                    called += 1;
+                    resolvedValue = value;
+                }, () => {
+                    called += 1;
+                });
+
+        _chai.expect(limitedTimePromise).to.be.a('promise');
+
+        _later(21, () => {
+            _chai.expect(called).to.equal(0);
+        });
+
+        _later(89, () => {
+            _chai.expect(called).to.equal(1);
+            _chai.expect(resolvedValue).to.equal(valueObject);
+            callbackFunction();
+        });
+    });
+
+    _mocha.it('should allow the promise to reject within time', callbackFunction => {
+        let called = 0,
+            rejectedError;
+
+        const errorObject = new _Error(),
+
+            limitedTimePromise = _timeout(55, new Promise((resolve, reject) => {
+                _later(34, () => {
+                    reject(errorObject);
+                });
+            }))
+                .then(() => {
+                    called += 1;
+                }, error => {
+                    called += 1;
+                    rejectedError = error;
+                });
+
+        _chai.expect(limitedTimePromise).to.be.a('promise');
+
+        _later(21, () => {
+            _chai.expect(called).to.equal(0);
+        });
+
+        _later(89, () => {
+            _chai.expect(called).to.equal(1);
+            _chai.expect(rejectedError).to.equal(errorObject);
+            callbackFunction();
+        });
+    });
+
+    _mocha.it('should call the lateCallbackFunction when resolved after the timeout', callbackFunction => {
+        let called = 0,
+            lateCalled = 0,
+            resolvedValue;
+
+        const valueObject = {},
+
+            limitedTimePromise = _timeout(34, new Promise(resolve => {
+                _later(89, () => {
+                    resolve(valueObject);
+                    _later.soon(() => {
+                        _chai.expect(lateCalled).to.equal(1);
+                        callbackFunction();
+                    });
+                });
+            }), (error, value) => {
+                lateCalled += 1;
+
+                _chai.expect(error).to.be.null;
+                _chai.expect(value).to.equal(valueObject);
+            })
+                .then(value => {
+                    called += 1;
+                    resolvedValue = value;
+                }, error => {
+                    called += 1;
+                    _chai.expect(error).to.be.an.instanceOf(_Error);
+                    _chai.expect(error).to.have.property('details').that.is.an('object').that.has.property('milliseconds', 34);
+                    _chai.expect(error).to.have.property('message', 'Timeout after 34 milliseconds');
+                    _chai.expect(error).to.have.property('name', 'TimeoutError');
+                });
+
+        _chai.expect(limitedTimePromise).to.be.a('promise');
+
+        _later(21, () => {
+            _chai.expect(called).to.equal(0);
+            _chai.expect(lateCalled).to.equal(0);
+        });
+
+        _later(55, () => {
+            _chai.expect(called).to.equal(1);
+            _chai.expect(lateCalled).to.equal(0);
+            _chai.expect(resolvedValue).to.be.undefined;
+        });
+    });
+
+    _mocha.it('should call the lateCallbackFunction when rejected after the timeout', callbackFunction => {
+        let called = 0,
+            lateCalled = 0,
+            resolvedValue;
+
+        const errorObject = new _Error(),
+
+            limitedTimePromise = _timeout(34, new Promise((resolve, reject) => {
+                _later(89, () => {
+                    reject(errorObject);
+                    _later.soon(() => {
+                        _chai.expect(lateCalled).to.equal(1);
+                        callbackFunction();
+                    });
+                });
+            }), error => {
+                lateCalled += 1;
+
+                _chai.expect(error).to.equal(errorObject);
+            })
+                .then(value => {
+                    called += 1;
+                    resolvedValue = value;
+                }, error => {
+                    called += 1;
+                    _chai.expect(error).to.be.an.instanceOf(_Error);
+                    _chai.expect(error).to.have.property('details').that.is.an('object').that.has.property('milliseconds', 34);
+                    _chai.expect(error).to.have.property('message', 'Timeout after 34 milliseconds');
+                    _chai.expect(error).to.have.property('name', 'TimeoutError');
+                });
+
+        _chai.expect(limitedTimePromise).to.be.a('promise');
+
+        _later(21, () => {
+            _chai.expect(called).to.equal(0);
+            _chai.expect(lateCalled).to.equal(0);
+        });
+
+        _later(55, () => {
+            _chai.expect(called).to.equal(1);
+            _chai.expect(lateCalled).to.equal(0);
+            _chai.expect(resolvedValue).to.be.undefined;
+        });
     });
 });
