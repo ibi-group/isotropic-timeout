@@ -33,8 +33,8 @@
         "Duane Sibilly <duane.sibilly@ibigroup.com>"
     ],
     "dependencies": {
-        "isotropic-error": "~0.8.0",
-        "isotropic-later": "~0.8.0"
+        "isotropic-error": "~0.9.0",
+        "isotropic-later": "~0.9.0"
     },
     "description": "Limit the amount of time a callback function will wait to be called.",
     "devDependencies": {
@@ -108,5 +108,5 @@
         "pretest": "npm run lint",
         "test": "cross-env BABEL_ENV=test nyc mocha"
     },
-    "version": "0.8.0"
+    "version": "0.9.0"
 }
