@@ -214,7 +214,6 @@ _mocha.describe('timeout when given a promise', function () {
             rejectedError;
 
         const errorObject = new _Error(),
-
             limitedTimePromise = _timeout(55, new Promise((resolve, reject) => {
                 _later(34, () => {
                     reject(errorObject);
@@ -292,7 +291,6 @@ _mocha.describe('timeout when given a promise', function () {
             resolvedValue;
 
         const errorObject = new _Error(),
-
             limitedTimePromise = _timeout(34, new Promise((resolve, reject) => {
                 _later(89, () => {
                     reject(errorObject);
