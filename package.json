@@ -7,6 +7,7 @@
     },
     "description": "Limit the amount of time a callback function will wait to be called",
     "devDependencies": {
+        "eslint": "~9.8.0",
         "isotropic-dev-dependencies": "~0.3.0"
     },
     "engines": {
