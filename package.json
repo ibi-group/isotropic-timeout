@@ -3,7 +3,7 @@
     "bugs": "https://github.com/ibi-group/isotropic-timeout/issues",
     "dependencies": {
         "isotropic-error": "~0.13.1",
-        "isotropic-later": "~0.13.1"
+        "isotropic-later": "~0.14.0"
     },
     "description": "Limit the amount of time a callback function will wait to be called",
     "devDependencies": {
@@ -36,5 +36,5 @@
         "test": "cross-env BABEL_ENV=test c8 -c ./node_modules/isotropic-dev-dependencies/config/c8.json mocha --import=isotropic-dev-dependencies/lib/register-babel-loader.js"
     },
     "type": "module",
-    "version": "0.13.1"
+    "version": "0.14.0"
 }
